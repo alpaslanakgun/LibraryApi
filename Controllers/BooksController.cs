@@ -3,6 +3,7 @@ using LibraryApi.DTOs;
 using LibraryApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -22,15 +23,15 @@ namespace LibraryApi.Controllers
 		[HttpGet]
 		//api/book
 		//api/book?category=Roman&year=1972
-		public ActionResult<IEnumerable<BookDto>> GetAll([FromQuery] string? category, [FromQuery]int?year)
+		public ActionResult<IEnumerable<BookDto>> GetAll([FromQuery] string? category, [FromQuery] int? year)
 		{
-			var query=_context.Books.Include(b=>b.Author).AsQueryable();
+			var query = _context.Books.Include(b => b.Author).AsQueryable();
 
-			if(!string.IsNullOrWhiteSpace(category))
-				query=query.Where(b=>b.Category == category);
+			if (!string.IsNullOrWhiteSpace(category))
+				query = query.Where(b => b.Category == category);
 
-			if(year.HasValue)
-				query=query.Where(query=>query.Year == year.Value);
+			if (year.HasValue)
+				query = query.Where(query => query.Year == year.Value);
 
 			var books = query.Select(b => new BookDto
 			{
@@ -45,9 +46,9 @@ namespace LibraryApi.Controllers
 		}
 
 		[HttpGet("{id}")]
-		public ActionResult<BookDto>GetById(int id)
+		public ActionResult<BookDto> GetById(int id)
 		{
-			var book = _context.Books.Include(b => b.Author).FirstOrDefault(x=>x.Id == id);
+			var book = _context.Books.Include(b => b.Author).FirstOrDefault(x => x.Id == id);
 			if (book == null)
 				return NotFound(new { error = $"Book with id {id} not found" });
 			var dto = new BookDto
@@ -62,16 +63,16 @@ namespace LibraryApi.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult<BookCreateDto> Create([FromBody]BookCreateDto bookCreateDto)
+		public ActionResult<BookCreateDto> Create([FromBody] BookCreateDto bookCreateDto)
 		{
 			if (string.IsNullOrWhiteSpace(bookCreateDto.Title))
 				return BadRequest(new { error = "Title is required" });//400
-			if(bookCreateDto.Year<1000 ||bookCreateDto.Year>DateTime.Now.Year)
+			if (bookCreateDto.Year < 1000 || bookCreateDto.Year > DateTime.Now.Year)
 				return BadRequest(new { error = "Year is not valid" });//400
 
 			var authorExists = _context.Authors.Any(a => a.Id == bookCreateDto.AuthorId);
-			if(!authorExists)
-			return BadRequest(new { error = $"Author with id{bookCreateDto.AuthorId}not found " });//400
+			if (!authorExists)
+				return BadRequest(new { error = $"Author with id{bookCreateDto.AuthorId}not found " });//400
 
 			var book = new Book
 			{
@@ -83,7 +84,7 @@ namespace LibraryApi.Controllers
 			_context.Books.Add(book);
 			_context.SaveChanges();
 
-			_context.Entry(book).Reference(b=>b.Author).Load();
+			_context.Entry(book).Reference(b => b.Author).Load();
 
 
 			var result = new BookDto
@@ -93,10 +94,35 @@ namespace LibraryApi.Controllers
 				Category = book.Category,
 				AuthorName = book.Author!.FullName
 			};
-			return CreatedAtAction(nameof(GetById), new {id=book.Id},result);//201 created
+			return CreatedAtAction(nameof(GetById), new { id = book.Id }, result);//201 created
+		}
+		[HttpPut("{id}")]
+		public ActionResult<BookUpdateDto> Update(int id, [FromBody] BookUpdateDto updateDto)
+		{
+
+			var book = _context.Books.Find(id);
+			if (book == null)
+				return NotFound();
+			if (string.IsNullOrWhiteSpace(updateDto.Title))
+				return BadRequest(new { error = "Title is required" });//400
+			book.Title = updateDto.Title;
+			book.Year = updateDto.Year;
+			book.Category = updateDto.Category;
+			book.AuthorId = updateDto.AuthorId;
+			_context.SaveChanges();
+			return NoContent(); //204 
 		}
 
-
+		[HttpDelete("{id}")]
+		public ActionResult Delete(int id)
+		{
+			var book = _context.Books.Find(id);
+			if (book == null)
+				return NotFound();
+			_context.Books.Remove(book);
+			_context.SaveChanges();
+			return NoContent();
+		}
 
 
 	}
