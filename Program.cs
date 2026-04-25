@@ -1,6 +1,11 @@
 
 using LibraryApi.Data;
+using LibraryApi.Models;
+using LibraryApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace LibraryApi
 {
@@ -15,15 +20,42 @@ namespace LibraryApi
             builder.Services.AddControllers();
 
 
+
+
             //EF-Core In-Memory Database : pc ram'inde olacak veriler
 
             builder.Services.AddDbContext<LibraryDBContext>(options => options.UseInMemoryDatabase("LibraryDB"));
 
-            //JWT
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            //builder.Services.AddOpenApi();
+            //JWT Konfigürasyonu 
 
-            builder.Services.AddEndpointsApiExplorer();
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            builder.Services.AddSingleton(jwtSettings);
+			builder.Services.AddScoped<ITokenService, TokenService>();
+
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
+            {
+                option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),ClockSkew=TimeSpan.Zero
+                  
+                };
+
+            });
+            builder.Services.AddAuthorization();
+
+
+
+			// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+			//builder.Services.AddOpenApi();
+
+			builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.AddSwaggerGen(options =>
             {
