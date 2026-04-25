@@ -12,11 +12,13 @@ namespace LibraryApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            /*seed data*/
             modelBuilder.Entity<Author>().HasData(
                  new Author { Id=1,FullName="Halis Gökçe",Country="TR"},
                  new Author { Id=2,FullName="Gürbüz Sucuoglu",Country="FR"},
                  new Author { Id=3,FullName="Kadir Dostayevski",Country="RS"},
-                 new Author { Id=4,FullName="Deniz Orwell",Country="BG"}
+                 new Author { Id=4,FullName="Deniz Orwell",Country="BG"},
+                 new Author { Id=5,FullName="Efe OK",Country="TR"}
 
                 );
             modelBuilder.Entity<Book>().HasData(
