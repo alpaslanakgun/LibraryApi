@@ -47,5 +47,35 @@ namespace LibraryApi.Controllers
 
 		}
 
+		/*
+		 Refresh Token : Access token kısa süreli olunca bir sorun cıkıyor kullanıcı her saat bası tekrar  login mi olacak ? iş tam bu anda devreye refresh token girmektedir. 
+
+		Access TOken > Süresi 15-60 dk arasında  Api isteklerinde kullanılır 
+		Refresh TOken =>7-30 gün arasında  ve sadece yeni access token almak istedigimizde kullanılır...
+
+
+
+		Access token kısa oldugu icin calınma riski az olur refresh token uzun ama sadece tek bir endpointte calısır onu daha güvenli saklarsınız.
+		 
+		
+		1=> Login 
+		      Client => Post => login [username,password]
+		      Server=> {accessToken}(60dk),refreshtoken 7 gün
+
+		2 Normal kullanım 60 dakika boyunca sistemdeyiz
+
+
+		3 60 dakika doldu access token süresi doldu 
+		   Server istek attıgın book tarafına 401 dönecek 
+
+
+
+
+
+		 
+		 */
+
+
+
 	}
 }
